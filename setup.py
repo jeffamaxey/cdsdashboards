@@ -65,21 +65,25 @@ share_cdsdashboards = pjoin(here, 'share', 'cdsdashboards')
 def get_data_files():
     """Get data files in share/cdsdashboards"""
 
-    data_files = []
     ntrim = len(here + os.path.sep)
 
-    for (d, _, filenames) in os.walk(share_cdsdashboards):
-        data_files.append((d[ntrim:], [pjoin(d, f)[ntrim:] for f in filenames]))
-    return data_files
+    return [
+        (d[ntrim:], [pjoin(d, f)[ntrim:] for f in filenames])
+        for d, _, filenames in os.walk(share_cdsdashboards)
+    ]
 
 def get_package_data():
     """Get package data
 
     (mostly alembic config)
     """
-    package_data = {}
-    package_data['cdsdashboards'] = ['alembic.ini', 'cdsalembic/*', 'cdsalembic/versions/*']
-    return package_data
+    return {
+        'cdsdashboards': [
+            'alembic.ini',
+            'cdsalembic/*',
+            'cdsalembic/versions/*',
+        ]
+    }
 
 
 setup_metadata.update(dict(

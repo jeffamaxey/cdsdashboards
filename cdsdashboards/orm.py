@@ -54,7 +54,7 @@ class Dashboard(Base):
     def groupname(self):
         if not self.urlname:
             raise Exception('Cannot calculate groupname before urlname is set')
-        return 'dash-{}'.format(self.urlname)
+        return f'dash-{self.urlname}'
 
     # properties on the dashboard wrapper
     # some APIs get these low-level objects
@@ -86,10 +86,7 @@ class Dashboard(Base):
     def is_orm_user_allowed(self, user):
         if user == self.user:
             return True
-        if not self.allow_all:
-            if not user in self.group.users:
-                return False
-        return True
+        return bool(self.allow_all or user in self.group.users)
 
     def __iter__(self):
         """
@@ -105,11 +102,11 @@ class Dashboard(Base):
         if existing_dashboard is not None:
             # Clone dashboard already exists, but update and save first if any fields need updating:
             if existing_dashboard.name != self.name \
-                    or existing_dashboard.description != self.description \
-                    or existing_dashboard.start_path != self.start_path \
-                    or existing_dashboard.presentation_type != self.presentation_type \
-                    or existing_dashboard.options != self.options \
-                    or existing_dashboard.allow_all != False:
+                        or existing_dashboard.description != self.description \
+                        or existing_dashboard.start_path != self.start_path \
+                        or existing_dashboard.presentation_type != self.presentation_type \
+                        or existing_dashboard.options != self.options \
+                        or existing_dashboard.allow_all != False:
 
                 existing_dashboard.name = self.name
                 existing_dashboard.description = self.description
@@ -126,15 +123,17 @@ class Dashboard(Base):
         # Create a completely new clone dashboard since none exists already
         new_dashboard = Dashboard(
             name=self.name,
-            urlname=Dashboard.calc_urlname("{}-{}".format(self.urlname, viewer_user.name), db),
-            user=viewer_user.orm_user, 
+            urlname=Dashboard.calc_urlname(
+                f"{self.urlname}-{viewer_user.name}", db
+            ),
+            user=viewer_user.orm_user,
             description=self.description,
-            start_path=self.start_path, 
+            start_path=self.start_path,
             presentation_type=self.presentation_type,
             options=self.options,
             allow_all=False,
-            template_parent_id=self.id
-            )
+            template_parent_id=self.id,
+        )
 
         db.add(new_dashboard)
         db.commit()
@@ -161,7 +160,7 @@ class Dashboard(Base):
             if orm_dashboard is None or counter >= 100:
                 now_unique = True
             else:
-                urlname = "{}-{}".format(base_urlname, counter)
+                urlname = f"{base_urlname}-{counter}"
                 counter += 1
 
         return urlname
@@ -210,13 +209,13 @@ def check_db_revision(engine):
                 inspector = inspect(engine)
                 cols = inspector.get_columns('dashboards')
                 colnames = [c.get('name','') for c in cols]
-                if not 'presentation_type' in colnames:
+                if 'presentation_type' not in colnames:
                     rev = base
                     # presentation_type was added in v0.0.13, so the reason we don't have cds_alembic_version 
                     # is because the db was created before we had db versioning
-                # If we DO have dashboards.presentation_type but no cds_alembic_version then this is just because
-                # it's a new installation, Dashboards has been created before this first check.
-            
+                            # If we DO have dashboards.presentation_type but no cds_alembic_version then this is just because
+                            # it's a new installation, Dashboards has been created before this first check.
+
             app_log.debug("Stamping dashboards database schema version %s", rev)
             alembic.command.stamp(cfg, rev)
 
@@ -225,17 +224,19 @@ def check_db_revision(engine):
                 'SELECT version_num FROM cds_alembic_version'
             ).first()[0]
 
-            if alembic_revision == base:
-                if 'dashboards' in current_table_names:
-                    inspector = inspect(engine)
-                    cols = inspector.get_columns('dashboards')
-                    colnames = [c.get('name','') for c in cols]
-                    if 'presentation_type' in colnames:
-                        # For people who got stuck in the broken upgrade before - actually they are NOT on base...
-                        rev = '260ac5c1a9e0'
-                        app_log.debug("Stamping dashboards database schema version %s", rev)
-                        alembic.command.stamp(cfg, rev)
-                    
+            if (
+                alembic_revision == base
+                and 'dashboards' in current_table_names
+            ):
+                inspector = inspect(engine)
+                cols = inspector.get_columns('dashboards')
+                colnames = [c.get('name','') for c in cols]
+                if 'presentation_type' in colnames:
+                    # For people who got stuck in the broken upgrade before - actually they are NOT on base...
+                    rev = '260ac5c1a9e0'
+                    app_log.debug("Stamping dashboards database schema version %s", rev)
+                    alembic.command.stamp(cfg, rev)
+
     # check database schema version
     # it should always be defined at this point
     alembic_revision = engine.execute(
@@ -244,7 +245,6 @@ def check_db_revision(engine):
 
     if alembic_revision == head:
         app_log.debug("database dashboards schema version found: %s", alembic_revision)
-        pass
     else:
         raise DatabaseSchemaMismatch(
             "Found database schema version {found} != {head}. "

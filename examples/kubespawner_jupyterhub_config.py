@@ -72,28 +72,25 @@ c.KubeSpawner.volume_mounts = [
     }
 ]
 
-# User options
-if True:
+c.CDSDashboardsConfig.spawn_default_options = False
 
-    c.CDSDashboardsConfig.spawn_default_options = False
-
-    c.KubeSpawner.profile_list = [
-    {
-        'display_name': 'Small',
-        'slug': 'small',
-        'default': True,
-        'kubespawner_override': {
-            'cpu_limit': 1,
-            'mem_limit': '512M'
-        }
-    }, {
-        'display_name': 'Large',
-        'slug': 'large',
-        'kubespawner_override': {
-            'cpu_limit': 1,
-            'mem_limit': '1G'
-        }
-    }]
+c.KubeSpawner.profile_list = [
+{
+    'display_name': 'Small',
+    'slug': 'small',
+    'default': True,
+    'kubespawner_override': {
+        'cpu_limit': 1,
+        'mem_limit': '512M'
+    }
+}, {
+    'display_name': 'Large',
+    'slug': 'large',
+    'kubespawner_override': {
+        'cpu_limit': 1,
+        'mem_limit': '1G'
+    }
+}]
 
 c.Spawner.start_timeout = 6000
 

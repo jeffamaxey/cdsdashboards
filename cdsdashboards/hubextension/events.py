@@ -27,7 +27,7 @@ class ProgressDashboardHandler(SpawnProgressAPIHandler):
 
         if not dashboard.is_orm_user_allowed(current_user.orm_user):
             raise HTTPError(403, 'User {} not authorized to access dashboard {}'.format(current_user.name, dashboard.urlname))
-        
+
 
         # start sending keepalive to avoid proxies closing the connection
         asyncio.ensure_future(self.keepalive())
@@ -73,7 +73,7 @@ class ProgressDashboardHandler(SpawnProgressAPIHandler):
             # check if spawner has just failed
             f = build_future
             if f and f.done() and f.exception():
-                failed_event['message'] = "Build failed: %s" % f.exception()
+                failed_event['message'] = f"Build failed: {f.exception()}"
                 await self.send_event(failed_event)
                 return
             else:
@@ -113,7 +113,7 @@ class ProgressDashboardHandler(SpawnProgressAPIHandler):
             # what happened? Maybe spawn failed?
             f = build_future
             if f and f.done() and f.exception():
-                failed_event['message'] = "Build failed: %s" % f.exception()
+                failed_event['message'] = f"Build failed: {f.exception()}"
             else:
                 self.log.warning(
                     "Server %s didn't start for unknown reason", builder._log_name

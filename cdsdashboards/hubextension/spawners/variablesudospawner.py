@@ -48,7 +48,7 @@ def mediator(*args, **kwargs):
     try:
         kwargs = json.load(sys.stdin)
     except ValueError as e:
-        app_log.error("Expected JSON on stdin, got %s" % e)
+        app_log.error(f"Expected JSON on stdin, got {e}")
         sys.exit(1)
 
     action = kwargs.pop('action')

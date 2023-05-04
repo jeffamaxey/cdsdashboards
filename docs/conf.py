@@ -21,7 +21,7 @@ import datetime
 now = datetime.datetime.now()
 
 project = 'ContainDS Dashboards'
-copyright = str(now.year)+', Ideonate'
+copyright = f'{now.year}, Ideonate'
 author = 'Ideonate'
 
 
@@ -69,4 +69,7 @@ exec(open(os.path.join(here,'../cdsdashboards/version.py')).read())
 # Read z2jh latest helm version
 z2jh_helm_version = open(os.path.join(here,'../helm-z2jh-latest.txt')).read().strip()
 
-rst_epilog = ".. |cds_version| replace:: {}\n".format(__version__) + ".. |z2jh_helm_version| replace:: {}\n".format(z2jh_helm_version)
+rst_epilog = (
+    f".. |cds_version| replace:: {__version__}\n"
+    + f".. |z2jh_helm_version| replace:: {z2jh_helm_version}\n"
+)

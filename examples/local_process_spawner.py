@@ -54,13 +54,13 @@ class SameUserSpawner(LocalProcessSpawner):
         return lambda: None
 
     def user_env(self, env):
-        path = '/Users/dan/Dev/cdsdashboards/examples/local_process_folder/%s' % self.user.name
+        path = f'/Users/dan/Dev/cdsdashboards/examples/local_process_folder/{self.user.name}'
 
         try:
             os.mkdir(path)
         except OSError:
-            print('Failed to create directory: %s' % path)
-       
+            print(f'Failed to create directory: {path}')
+
         return env
 
     def _notebook_dir_default(self):

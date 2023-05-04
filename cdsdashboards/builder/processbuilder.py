@@ -47,7 +47,7 @@ class ProcessBuilder(Builder):
         if not spawn_default_options:
 
             if not form_options:
-                
+
                 spawner_options_form = await spawner.get_options_form()
                 if spawner_options_form:
                     app_log.info('Options form is present')
@@ -57,7 +57,7 @@ class ProcessBuilder(Builder):
 
                 try:
                     user_options = await maybe_future(spawner.options_from_form(form_options))
-                    new_server_options.update(user_options)
+                    new_server_options |= user_options
                 except Exception as e:
                     app_log.error(
                         "Failed to spawn dashboard server with form", exc_info=True
@@ -66,7 +66,7 @@ class ProcessBuilder(Builder):
                     if spawner_options_form:
                         app_log.info('Options form is present after failure')
                         return (None, None, spawner_options_form)
-                        
+
         # Dashboard-specific options
         git_repo = dashboard.options.get('git_repo', '')
         git_repo_branch = dashboard.options.get('git_repo_branch', '')
@@ -78,14 +78,16 @@ class ProcessBuilder(Builder):
             'git_repo': git_repo,
             'git_repo_branch': git_repo_branch,
             'conda_env': conda_env})
-        
+
         if 'environment' not in new_server_options:
             new_server_options['environment'] = {}
 
         if not self.cdsconfig.spawn_as_viewer:
-            new_server_options['environment'].update({
-                    'JUPYTERHUB_ANYONE': '{}'.format(dashboard.allow_all and '1' or '0'),
-                    'JUPYTERHUB_GROUP': '{}'.format(dashboard.groupname)
-                    })
+            new_server_options['environment'].update(
+                {
+                    'JUPYTERHUB_ANYONE': f"{dashboard.allow_all and '1' or '0'}",
+                    'JUPYTERHUB_GROUP': f'{dashboard.groupname}',
+                }
+            )
 
         return (new_server_name, new_server_options, None)

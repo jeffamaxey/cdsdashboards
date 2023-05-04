@@ -41,9 +41,9 @@ class Builder(LoggingConfigurable):
         """Return username:dashboard_urlname
         """
         if self.dashboard:
-            return '%s:%s' % (self.dashboard.user.name, self.dashboard.urlname)
+            return f'{self.dashboard.user.name}:{self.dashboard.urlname}'
         else:
-            return 'Dashboard Builder {}'.format(self)
+            return f'Dashboard Builder {self}'
 
     @property
     def pending(self):
@@ -51,10 +51,7 @@ class Builder(LoggingConfigurable):
 
         Return False if nothing is pending.
         """
-        if self._build_pending:
-            return 'build'
-
-        return None
+        return 'build' if self._build_pending else None
 
     @property
     def ready(self):
@@ -68,9 +65,11 @@ class Builder(LoggingConfigurable):
             return False
         if self.dashboard.final_spawner is None:
             return False
-        if self._build_future and self._build_future.done() and self._build_future.exception():
-            return False
-        return True
+        return (
+            not self._build_future
+            or not self._build_future.done()
+            or not self._build_future.exception()
+        )
 
     @property
     def active(self):
@@ -94,16 +93,13 @@ class Builder(LoggingConfigurable):
 
         super().__init_subclass__()
 
-        missing = []
-        for attr in ('start',):
-            if getattr(Builder, attr) is getattr(cls, attr):
-                missing.append(attr)
-
-        if missing:
+        if missing := [
+            attr
+            for attr in ('start',)
+            if getattr(Builder, attr) is getattr(cls, attr)
+        ]:
             raise NotImplementedError(
-                "class `{}` needs to redefine the `start` method(s). `{}` not redefined.".format(
-                    cls.__name__, '`, `'.join(missing)
-                )
+                f"class `{cls.__name__}` needs to redefine the `start` method(s). `{'`, `'.join(missing)}` not redefined."
             )
 
     def __init__(self, dashboard, cdsconfig, config=None):
@@ -197,10 +193,7 @@ class Builder(LoggingConfigurable):
             if next_event < len_events:
 
                 for i in range(next_event, len_events):
-                    event = event_queue[i]
-
-                    yield event 
-                
+                    yield event_queue[i]
                 next_event = len_events
 
             if break_while_loop:
@@ -241,14 +234,9 @@ class Builder(LoggingConfigurable):
 
             ns (dict): namespace for string formatting.
         """
-        date = datetime.today().strftime('%Y%m%d')
-        time = datetime.today().strftime('%H%M%S')
-        d = {
-            'urlname': self.dashboard.urlname,
-            'date': date,
-            'time': time
-            }
-        return d
+        date = datetime.now().strftime('%Y%m%d')
+        time = datetime.now().strftime('%H%M%S')
+        return {'urlname': self.dashboard.urlname, 'date': date, 'time': time}
 
     def format_string(self, s, ns=None):
         """Render a Python format string

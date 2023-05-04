@@ -70,7 +70,9 @@ class BasicDashboardEditHandler(DashboardBaseHandler):
         dashboard_presentation_type = ''
         dashboard_start_path = self.get_argument('start_path', '').strip()
         dashboard_options = {}
-        user_permissions = cdsconfig.default_allow_all and 'anyusers' or 'selectedusers'
+        user_permissions = (
+            'anyusers' if cdsconfig.default_allow_all else 'selectedusers'
+        )
 
         if dashboard_urlname is not None:
 
@@ -97,7 +99,7 @@ class BasicDashboardEditHandler(DashboardBaseHandler):
             dashboard_start_path = dashboard.start_path or ''
             dashboard_presentation_type = dashboard.presentation_type
             dashboard_options = dashboard.options
-            user_permissions = dashboard.allow_all and 'anyusers' or 'selectedusers'
+            user_permissions = 'anyusers' if dashboard.allow_all else 'selectedusers'
 
         # Get List of possible visitor users
         existing_group_users = None
@@ -119,7 +121,7 @@ class BasicDashboardEditHandler(DashboardBaseHandler):
         conda_env = dashboard_options.get('conda_env', '')
 
         errors = DefaultObjDict()
-        
+
         merged_presentation_types = cdsconfig.merged_presentation_types
         all_conda_envs = cdsconfig.conda_envs
         allow_custom_conda_env = cdsconfig.allow_custom_conda_env

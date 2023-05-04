@@ -23,7 +23,7 @@ class DockerBuilder(ProcessBuilder):
             kwargs = {"version": "auto"}
             if self.tls_config:
                 kwargs["tls"] = docker.tls.TLSConfig(**self.tls_config)
-            kwargs.update(kwargs_from_env())
+            kwargs |= kwargs_from_env()
             kwargs.update(self.client_kwargs)
             client = docker.APIClient(**kwargs)
             cls._client = client

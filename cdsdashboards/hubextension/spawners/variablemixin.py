@@ -220,14 +220,14 @@ class VariableMixin(Configurable):
         repofolder = ''
         if git_repo != '':
             repofolder = self._calc_repo_folder(git_repo)
-            args.append('--repo={}'.format(_quote_safe(git_repo)))
+            args.append(f'--repo={_quote_safe(git_repo)}')
             notebook_dir = os.path.join(notebook_dir, repofolder)
-            args.append('--repofolder={}'.format(_quote_safe(notebook_dir)))
+            args.append(f'--repofolder={_quote_safe(notebook_dir)}')
 
             if git_repo_branch:
-              args.append('--repobranch={}'.format(_quote_safe(git_repo_branch)))
+                args.append(f'--repobranch={_quote_safe(git_repo_branch)}')
 
-        if presentation_path != '' and not '..' in presentation_path:
+        if presentation_path != '' and '..' not in presentation_path:
             # Should have been validated when dashboard created, but .. is particularly dangerous
             presentation_path = re.sub('^/+', '', presentation_path) # Remove leading slash(es) to ensure it is relative to home folder
             notebook_dir = os.path.join(notebook_dir, presentation_path)
@@ -235,14 +235,14 @@ class VariableMixin(Configurable):
         if 'args' in launcher:
             args.extend(launcher['args'])
 
-        args.append('--presentation-path={}'.format(_quote_safe(notebook_dir)))
+        args.append(f'--presentation-path={_quote_safe(notebook_dir)}')
 
         conda_env = self.user_options.get('conda_env', '')
         if conda_env != '':
-            args.append('--conda-env=%s' % _quote_safe(conda_env))
+            args.append(f'--conda-env={_quote_safe(conda_env)}')
 
         if self.ip:
-            args.append('--ip=%s' % _quote_safe(self.ip))
+            args.append(f'--ip={_quote_safe(self.ip)}')
 
         if self.port:
             args.append('--port=%i' % self.port)
@@ -254,25 +254,24 @@ class VariableMixin(Configurable):
                 args.append('{--}debug')
             args.append('--debug') # For jhsingle-native-proxy itself
 
-        proxy_request_timeout = getattr(self, 'proxy_request_timeout', 0)
-        if proxy_request_timeout:
-            args.append('--request-timeout={}'.format(proxy_request_timeout))
+        if proxy_request_timeout := getattr(self, 'proxy_request_timeout', 0):
+            args.append(f'--request-timeout={proxy_request_timeout}')
 
-        proxy_ready_timeout = getattr(self, 'proxy_ready_timeout', 0)
-        if proxy_ready_timeout:
-            args.append('--ready-timeout={}'.format(proxy_ready_timeout))
+        if proxy_ready_timeout := getattr(self, 'proxy_ready_timeout', 0):
+            args.append(f'--ready-timeout={proxy_ready_timeout}')
 
         proxy_force_alive = getattr(self, 'proxy_force_alive', True)
-        if proxy_force_alive == False:
+        if not proxy_force_alive:
             args.append('--no-force-alive')
 
         proxy_last_activity_interval = getattr(self, 'proxy_last_activity_interval', 300)
         if proxy_last_activity_interval != 300:
-            args.append('--last-activity-interval={}'.format(proxy_last_activity_interval))
+            args.append(f'--last-activity-interval={proxy_last_activity_interval}')
 
-        proxy_websocket_max_message_size = getattr(self, 'proxy_websocket_max_message_size', 0)
-        if proxy_websocket_max_message_size:
-            args.append('--websocket-max-message-size={}'.format(proxy_websocket_max_message_size))
+        if proxy_websocket_max_message_size := getattr(
+            self, 'proxy_websocket_max_message_size', 0
+        ):
+            args.append(f'--websocket-max-message-size={proxy_websocket_max_message_size}')
 
         args.extend(self.args)
 
@@ -290,7 +289,9 @@ class VariableMixin(Configurable):
         if self.user_options and 'presentation_type' in self.user_options:
             presentation_type = self.user_options['presentation_type']
             if presentation_type not in self.merged_presentation_launchers:
-                raise Exception('presentation type {} has not been registered with the spawner'.format(presentation_type))
+                raise Exception(
+                    f'presentation type {presentation_type} has not been registered with the spawner'
+                )
             return presentation_type
         return ''
 
@@ -310,7 +311,7 @@ class VariableMixin(Configurable):
                     presentation_path = self.user_options['presentation_path']
                     presentation_dirname = os.path.dirname(presentation_path)
 
-                self.log.info('presentation_dirname: {}'.format(presentation_dirname))
+                self.log.info(f'presentation_dirname: {presentation_dirname}')
 
                 for k,v in launcher['env'].items():
                     env[k] = _fixed_format(v,
@@ -329,7 +330,7 @@ class VariableMixin(Configurable):
 
     def run_pre_spawn_hook(self):
         if not SpawnPermissionsController.get_instance(CDSConfigStore.get_instance(self.config), self.db).can_user_spawn(self.user.orm_user):
-            raise Exception('User {} is not allowed to spawn a server'.format(self.user.name))
+            raise Exception(f'User {self.user.name} is not allowed to spawn a server')
         return super().run_pre_spawn_hook()
 
     def _wrap_options_from_form(outerself, realfn):

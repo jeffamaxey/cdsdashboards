@@ -19,12 +19,12 @@ from ..util import DefaultObjDict, url_path_join
 def spawner_to_dict(spawner):
     name = spawner.name
     active = spawner.active
-    id = 'named-{}'.format(name)
-    
+    id = f'named-{name}'
+
     if name == '':
         id = 'default'
         name = 'Default Server'
-        
+
     return DefaultObjDict({'name': name, 'active': active, 'id': id, 'orm_spawner': spawner.orm_spawner})
 
 def check_database_upgrade(f):
@@ -110,33 +110,35 @@ class DashboardBaseMixin:
                 break
 
             if new_server_name in dashboard_user.spawners and dashboard_user.spawners[new_server_name].pending \
-                and dashboard_user.spawners[new_server_name]._spawn_future:
+                    and dashboard_user.spawners[new_server_name]._spawn_future:
 
                 spawner = dashboard_user.spawners[new_server_name]
 
                 app_log.debug('Found spawner for progress')
 
                 async with aclosing(
-                    iterate_until(maybe_future(builder._build_future), spawner._generate_progress())
-                ) as spawnevents:
+                                iterate_until(maybe_future(builder._build_future), spawner._generate_progress())
+                            ) as spawnevents:
                     try:
                         async for event in spawnevents:
                             if 'message' in event:
-                                builder.add_progress_event({
-                                    'progress': 95, 'message': 'Spawner progress: {}'.format(event['message'])
-                                    })
+                                builder.add_progress_event(
+                                    {
+                                        'progress': 95,
+                                        'message': f"Spawner progress: {event['message']}",
+                                    }
+                                )
                     except CancelledError:
                         pass
 
                 break 
 
     def get_visitor_dashboards(self, user):
-        orm_dashboards = set()
-
-        for group in user.groups:
-            if group.dashboard_visitors_for:
-                orm_dashboards.add(group.dashboard_visitors_for)
-
+        orm_dashboards = {
+            group.dashboard_visitors_for
+            for group in user.groups
+            if group.dashboard_visitors_for
+        }
         orm_dashboards.update(self.db.query(Dashboard).filter(Dashboard.allow_all==True).filter(Dashboard.user != user.orm_user).all())
 
         user_dashboard_groups = defaultdict(list)
@@ -155,11 +157,7 @@ class DashboardBaseMixin:
     def get_visitor_tuples(self, exclude_user_id=None, existing_group_users=None):
         possible_visitor_users = self.get_visitor_users(exclude_user_id)
 
-        visitor_users = []
-
-        if existing_group_users is not None:
-            visitor_users = existing_group_users
-
+        visitor_users = [] if existing_group_users is None else existing_group_users
         all_tuples = [(True, user.name) for user in visitor_users] + [(False, user.name) for user in set(possible_visitor_users) - set(visitor_users)]
         all_tuples.sort(key=lambda x: x[1])
         return all_tuples
@@ -286,22 +284,21 @@ class DashboardBaseMixin:
     async def maybe_delete_existing_server(self, orm_spawner, dashboard_user):
         if not orm_spawner:
             return False
-        
+
         server_name = orm_spawner.name
 
         user = self._user_from_orm(dashboard_user)
 
         spawner = user.spawners[server_name]
 
-        if server_name:
-            if not self.allow_named_servers:
-                raise HTTPError(400, "Named servers are not enabled.")
-            if server_name not in user.orm_spawners:
-                self.log.debug("%s does not exist anyway", spawner._log_name)
-                return False
-        else:
+        if not server_name:
             raise HTTPError(400, "Cannot delete the default server")
 
+        if not self.allow_named_servers:
+            raise HTTPError(400, "Named servers are not enabled.")
+        if server_name not in user.orm_spawners:
+            self.log.debug("%s does not exist anyway", spawner._log_name)
+            return False
         if spawner.pending == 'stop':
             self.log.debug("%s already stopping", spawner._log_name)
 

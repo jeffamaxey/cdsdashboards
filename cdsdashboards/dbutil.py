@@ -97,10 +97,10 @@ def backup_db_file(db_file, log=None):
     for i in range(1, 10):
         if not os.path.exists(backup_db_file):
             break
-        backup_db_file = '{}.{}.{}'.format(db_file, timestamp, i)
+        backup_db_file = f'{db_file}.{timestamp}.{i}'
     #
     if os.path.exists(backup_db_file):
-        raise OSError("backup db file already exists: %s" % backup_db_file)
+        raise OSError(f"backup db file already exists: {backup_db_file}")
     if log:
         log.info("Backing up %s => %s", db_file, backup_db_file)
     shutil.copy(db_file, backup_db_file)
@@ -144,9 +144,7 @@ def upgrade_if_needed(engine, backup=True, log=None):
     if urlinfo.password:
         # avoid logging the database password
         urlinfo = urlinfo._replace(
-            netloc='{}:[redacted]@{}:{}'.format(
-                urlinfo.username, urlinfo.hostname, urlinfo.port
-            )
+            netloc=f'{urlinfo.username}:[redacted]@{urlinfo.hostname}:{urlinfo.port}'
         )
         db_log_url = urlinfo.geturl()
     else:
@@ -156,7 +154,7 @@ def upgrade_if_needed(engine, backup=True, log=None):
     if backup and db_url.startswith('sqlite:///'):
         db_file = db_url.split(':///', 1)[1]
         backup_db_file(db_file, log=log)
-    
+
     upgrade(db_url)
 
     global _needs_db_upgrade
@@ -196,7 +194,7 @@ def main(args=None):
     # to subcommands
     choices = ['shell', 'alembic']
     if not args or args[0] not in choices:
-        print("Select a command from: %s" % ', '.join(choices))
+        print(f"Select a command from: {', '.join(choices)}")
         return 1
     cmd, args = args[0], args[1:]
 

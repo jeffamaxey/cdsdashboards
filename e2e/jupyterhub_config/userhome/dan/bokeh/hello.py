@@ -11,7 +11,7 @@ output = Paragraph()
 
 # add a callback to a widget
 def update():
-    output.text = "Hello, " + input.value
+    output.text = f"Hello, {input.value}"
 button.on_click(update)
 
 # create a layout for everything

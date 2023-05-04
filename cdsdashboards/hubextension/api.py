@@ -87,7 +87,10 @@ class DashboardDeleteAPIHandler(DashboardBaseAPIHandler):
             raise HTTPError(404, "Dashboard does not exist.")
 
         if dashboard.user.name != current_user.name:
-            raise HTTPError(403, 'This is not your dashboard: dashboard user {} does not match you ({})'.format(dashboard.user.name, current_user.name))
+            raise HTTPError(
+                403,
+                f'This is not your dashboard: dashboard user {dashboard.user.name} does not match you ({current_user.name})',
+            )
 
         # options = self.get_json_body()
 
@@ -96,10 +99,13 @@ class DashboardDeleteAPIHandler(DashboardBaseAPIHandler):
         builder = builders_store[dashboard]
 
         if builder.pending:
-            raise HTTPError(400, 'Dashboard {} is currently building. Please try again once complete.'.format(dashboard_urlname))
+            raise HTTPError(
+                400,
+                f'Dashboard {dashboard_urlname} is currently building. Please try again once complete.',
+            )
 
         try:
-        
+
             await self.maybe_delete_existing_server(dashboard.final_spawner, current_user)
 
             # TODO check delete went OK
@@ -116,7 +122,7 @@ class DashboardDeleteAPIHandler(DashboardBaseAPIHandler):
             self.db.commit()
 
         except Exception as e:
-            raise HTTPError(500, 'Error removing dashboard {}: {}'.format(dashboard_urlname, e))
+            raise HTTPError(500, f'Error removing dashboard {dashboard_urlname}: {e}')
 
         self.set_header('Content-Type', 'text/plain')
         self.set_status(202)

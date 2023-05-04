@@ -34,10 +34,7 @@ class DashboardRepr(LoggingConfigurable):
     )
 
     async def get_user_data(self, username):
-        resp = await self.api_request(
-            'users/%s' % username,
-            method='GET',
-        )
+        resp = await self.api_request(f'users/{username}', method='GET')
         body = json.loads(resp.body.decode('utf-8'))
         return body
 
@@ -57,11 +54,11 @@ class DashboardRepr(LoggingConfigurable):
     async def api_request(self, url, *args, **kwargs):
         """Make an API request to JupyterHub"""
         headers = kwargs.setdefault('headers', {})
-        headers.update({'Authorization': 'token %s' % self.hub_api_token})
-        hub_api_url = os.getenv('JUPYTERHUB_API_URL', '') or self.hub_url + 'hub/api/'
+        headers.update({'Authorization': f'token {self.hub_api_token}'})
+        hub_api_url = os.getenv('JUPYTERHUB_API_URL', '') or f'{self.hub_url}hub/api/'
         request_url = hub_api_url + url
 
-        self.log.info("API call to {} with token {}".format(request_url, self.hub_api_token))
+        self.log.info(f"API call to {request_url} with token {self.hub_api_token}")
 
         req = HTTPRequest(request_url, *args, **kwargs, validate_cert=False)
         retry_delay = self.retry_delay

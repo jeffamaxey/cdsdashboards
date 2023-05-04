@@ -17,9 +17,9 @@ def url_path_join(*pieces):
     result = "/".join(s for s in stripped if s)
 
     if initial:
-        result = "/" + result
+        result = f"/{result}"
     if final:
-        result = result + "/"
+        result += "/"
     if result == "//":
         result = "/"
 
@@ -28,9 +28,7 @@ def url_path_join(*pieces):
 
 class DefaultObjDict(dict):
     def __getattr__(self, name):
-        if name in self:
-            return self[name]
-        return None
+        return self[name] if name in self else None
 
     def __setattr__(self, name, value):
         self[name] = value
@@ -39,7 +37,7 @@ class DefaultObjDict(dict):
         if name in self:
             del self[name]
         else:
-            raise AttributeError("No such attribute: " + name)
+            raise AttributeError(f"No such attribute: {name}")
 
 
 def maybe_future(obj):
